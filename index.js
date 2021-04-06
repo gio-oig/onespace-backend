@@ -54,6 +54,10 @@ mongoose.connect(
  * axios.defaults.withCredentials=true
  */
 
+app.get('/', (req, res) => {
+	res.send('works');
+});
+
 app.use('/uploads/images', express.static(path.join('uploads', 'images')));
 
 /**
@@ -90,4 +94,4 @@ app.use((error, req, res, next) => {
 
 const port = process.env.PORT;
 
-server.listen(5000, () => console.log('server up and running'));
+server.listen(port || 5000, () => console.log('server up and running'));
