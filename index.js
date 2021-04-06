@@ -25,7 +25,12 @@ const io = require('socket.io')(server, {
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-app.use(cors({ origin: true, credentials: true }));
+app.use(
+	cors({
+		origin: ['http://localhost:8080', 'https://onespace-vue.herokuapp.com'],
+		credentials: true,
+	})
+);
 app.use(morgan('common'));
 app.use(cookieparser());
 
