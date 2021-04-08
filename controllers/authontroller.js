@@ -1,6 +1,6 @@
 const Helper = require('../utils/helper');
 const bcrypt = require('bcryptjs');
-const HttpError = require('../utils/errorHelper');
+// const HttpErro = require('../utils/errorHelper');
 const User = require('../models/User');
 
 const register = async (req, res, next) => {
@@ -10,7 +10,7 @@ const register = async (req, res, next) => {
 
 	const userExists = await User.findOne({ email });
 	if (userExists) {
-		return next(new HttpError('user already exists with this email', 400));
+		return next(new Error('user already exists with this email', 400));
 	}
 
 	let hashPass;
@@ -18,7 +18,7 @@ const register = async (req, res, next) => {
 		// generate hashed passsword
 		hashPass = await bcrypt.hash(password, await bcrypt.genSalt());
 	} catch (error) {
-		return next(new HttpError(error));
+		return next(new Error(error));
 	}
 
 	const expireAt = Helper.getExpireDate();
@@ -43,7 +43,7 @@ const register = async (req, res, next) => {
 	try {
 		createdUser = await user.save();
 	} catch (error) {
-		return next(new HttpError('Logging in faild, please try later', 500));
+		return next(new Error('Logging in faild, please try later', 500));
 	}
 
 	res.json(createdUser);
@@ -60,53 +60,54 @@ const login = async (req, res, next) => {
 		existingUser = await User.findOne({ email });
 		console.log(existingUser);
 		if (!existingUser) {
-			return next(new HttpError('Wrong Email'));
+			return next(new Error('Wrong Email'));
 		}
 	} catch (error) {
 		console.log(error);
 	}
 	const validPassword = await bcrypt.compare(password, existingUser.password);
-	if (!validPassword) return next(new HttpError('Invalid Password'));
+	if (!validPassword) return next(new Error('Invalid Password'));
 
 	// get token and set into cookies
 	const expireAt = Helper.getExpireDate();
 	const token = Helper.getJWTtoken(email, expireAt);
 
-	res.cookie('token', token, {
-		httpOnly: true,
-		expires: new Date(expireAt),
-	});
+	// res.cookie('token', token, {
+	// 	httpOnly: true,
+	// 	expires: new Date(expireAt),
+	// });
 
-	return res.json(existingUser);
+	return res.json({ user: existingUser, token });
 };
 const logout = async (req, res, next) => {
-	res.cookie('token', '', {
-		httpOnly: true,
-		expires: new Date(0),
-	});
+	// res.cookie('token', '', {
+	// 	httpOnly: true,
+	// 	expires: new Date(0),
+	// });
 	res.send('logged out');
 };
 const isLogedIn = async (req, res, next) => {
-	console.log(req.cookies);
+	const token = req.headers['authorization'];
+	console.log(typeof token);
+	if (!token) {
+		console.log('object');
+		return next(new Error('Unauthorized Access', 400));
+	}
 	try {
-		const token = req.cookies.token;
-		if (!token) {
-			throw new Error('Unauthorized Access');
-		}
 		//token validation
 		const email = Helper.verifyJWTtoken(token);
-		console.log(email);
+		console.log('email ' + email);
 		let user = await User.findOne({ email });
-
-		res.send(user); // logged in
+		console.log('email ' + user);
+		res.json({ user }); // logged in
 	} catch (e) {
 		//remove the old/expire token
-		res.cookie('token', '', {
-			httpOnly: true,
-			expires: new Date(0),
-		});
-		// return next(new HttpError(e.message, 400));
-		res.send(false);
+		// res.cookie('token', '', {
+		// 	httpOnly: true,
+		// 	expires: new Date(0),
+		// });
+		return next(new Error(e.message, 400));
+		// res.send(false);
 	}
 };
 

@@ -16,8 +16,8 @@ const allPosts = async (req, res) => {
 };
 
 const create = async (req, res) => {
+	const token = req.headers['authorization'];
 	const { content } = req.body;
-	const token = req.cookies.token;
 
 	const email = Helper.verifyJWTtoken(token);
 

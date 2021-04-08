@@ -12,12 +12,12 @@ const app = express();
 const server = http.createServer(app);
 dotenv.config();
 
-const io = require('socket.io')(server, {
-	cors: {
-		origin: 'http://localhost:8080',
-		withCredentials: true,
-	},
-});
+// const io = require('socket.io')(server, {
+// 	cors: {
+// 		origin: 'http://localhost:8080',
+// 		withCredentials: true,
+// 	},
+// });
 
 /**
  *   @midleware
