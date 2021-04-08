@@ -63,7 +63,10 @@ app.get('/', (req, res) => {
 	res.send('works');
 });
 
-app.use('/uploads/images', express.static(path.join('uploads', 'images')));
+app.use(
+	'/uploads/images',
+	express.static(path.join(__dirname, 'uploads', 'images'))
+);
 
 /**
  * @routes
