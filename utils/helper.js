@@ -14,6 +14,7 @@ const Helper = {
 			expiresIn: expires,
 		});
 	},
+	// @return email:string
 	verifyJWTtoken: (token) => {
 		try {
 			if (!token) {

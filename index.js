@@ -7,17 +7,19 @@ const morgan = require('morgan');
 const cookieparser = require('cookie-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const socket = require('./socket');
 
 const app = express();
 const server = http.createServer(app);
 dotenv.config();
 
-// const io = require('socket.io')(server, {
-// 	cors: {
-// 		origin: 'http://localhost:8080',
-// 		withCredentials: true,
-// 	},
-// });
+const io = require('socket.io')(server, {
+	cors: {
+		origin: 'http://localhost:8080',
+	},
+});
+
+socket(io);
 
 /**
  *   @midleware
@@ -69,12 +71,6 @@ app.use('/uploads/images', express.static(path.join('uploads', 'images')));
  * @routes
  */
 
-// app.get('/api/user/:name', async (req, res) => {
-// 	const { name } = req.params;
-// 	const user = await Post.find({}).populate('author');
-// 	res.json(user);
-// });
-
 app.use('/api/user', authRoute);
 app.use('/api/post', postRoute);
 app.use('/api/comment', commentRoute);
@@ -85,12 +81,13 @@ app.use((req, res, next) => {
 });
 
 app.use((error, req, res, next) => {
+	console.log(error.message);
 	// delete image if we got an error
 	// multer adds file property to request object
 	if (req.file) {
 		fs.unlink(req.file.path, (err) => console.log(err));
 	}
-	res.status(error.code || 500);
+	res.statusCode = error.code || 500;
 	res.json({
 		message: error.message,
 		stack: error.stack,

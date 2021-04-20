@@ -1,7 +1,10 @@
 const Helper = require('../utils/helper');
 const bcrypt = require('bcryptjs');
-// const HttpErro = require('../utils/errorHelper');
 const User = require('../models/User');
+
+const HttpError = require('../utils/errorHelper');
+
+const { loginValidation } = require('../validations');
 
 const register = async (req, res, next) => {
 	// console.log(req.file);
@@ -10,7 +13,7 @@ const register = async (req, res, next) => {
 
 	const userExists = await User.findOne({ email });
 	if (userExists) {
-		return next(new Error('user already exists with this email', 400));
+		throw new HttpError('user already exists with this email', 400);
 	}
 
 	let hashPass;
@@ -51,16 +54,18 @@ const register = async (req, res, next) => {
 const login = async (req, res, next) => {
 	const { email, password } = req.body;
 
-	// res.sendStatus(500);
-	// console.log(req.body);
-	// return;
+	try {
+		await loginValidation({ email, password });
+	} catch (error) {
+		console.log(error);
+		return next(new HttpError(error.details));
+	}
 
 	let existingUser;
 	try {
 		existingUser = await User.findOne({ email });
-		console.log(existingUser);
 		if (!existingUser) {
-			return next(new Error('Wrong Email'));
+			throw new HttpError('Wrong Email', 500);
 		}
 	} catch (error) {
 		console.log(error);
@@ -72,40 +77,24 @@ const login = async (req, res, next) => {
 	const expireAt = Helper.getExpireDate();
 	const token = Helper.getJWTtoken(email, expireAt);
 
-	// res.cookie('token', token, {
-	// 	httpOnly: true,
-	// 	expires: new Date(expireAt),
-	// });
-
 	return res.json({ user: existingUser, token });
 };
 const logout = async (req, res, next) => {
-	// res.cookie('token', '', {
-	// 	httpOnly: true,
-	// 	expires: new Date(0),
-	// });
 	res.send('logged out');
 };
 const isLogedIn = async (req, res, next) => {
 	const token = req.headers['authorization'];
-	console.log(typeof token);
+
 	if (!token) {
-		console.log('object');
-		return next(new Error('Unauthorized Access', 400));
+		return next(new HttpError('Unauthorized Access', 500));
 	}
 	try {
 		//token validation
 		const email = Helper.verifyJWTtoken(token);
-		console.log('email ' + email);
+		// console.log('email ' + email);
 		let user = await User.findOne({ email });
-		console.log('email ' + user);
 		res.json({ user }); // logged in
 	} catch (e) {
-		//remove the old/expire token
-		// res.cookie('token', '', {
-		// 	httpOnly: true,
-		// 	expires: new Date(0),
-		// });
 		return next(new Error(e.message, 400));
 		// res.send(false);
 	}
