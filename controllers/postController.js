@@ -19,6 +19,8 @@ const create = async (req, res) => {
 	const token = req.headers['authorization'];
 	const { content } = req.body;
 
+	console.log(token);
+
 	const email = Helper.verifyJWTtoken(token);
 
 	const user = await User.findOne({ email });
@@ -36,7 +38,7 @@ const create = async (req, res) => {
 		.populate('author', ['name', 'image'])
 		.execPopulate();
 
-	console.log(populatedPost);
+	// console.log(populatedPost);
 
 	res.json(populatedPost);
 };

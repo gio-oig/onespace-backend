@@ -1,6 +1,8 @@
 const router = require('express').Router();
 const postController = require('../controllers/postController');
 
+const auth = require('../middleware/verifyToken');
+
 /**
  * @description 1. fetch all post
  * @endpoint http://localhost:5000/post
@@ -17,7 +19,7 @@ router.post('/create', postController.create);
  * @description 1. like a post
  * @endpoint http://localhost:5000/post/like
  */
-router.post('/like', postController.likePost);
+router.post('/like', auth.verifyToken, postController.likePost);
 
 /**
  * @description 1. delete a post

@@ -24,10 +24,10 @@ const register = async (req, res, next) => {
 		return next(new Error(error));
 	}
 
-	const expireAt = Helper.getExpireDate();
-	const TOKEN = Helper.getJWTtoken(email, expireAt);
+	// const expireAt = Helper.getExpireDate();
+	// const TOKEN = Helper.getJWTtoken(email, expireAt);
 	// console.log(expireAt);
-	res.cookie('token', TOKEN, { httpOnly: true, expires: new Date(expireAt) });
+	// res.cookie('token', TOKEN, { httpOnly: true, expires: new Date(expireAt) });
 	// let image;
 	// try {
 	// 	image = req.file ? req.file.filename : null;
@@ -89,14 +89,14 @@ const logout = async (req, res, next) => {
 };
 const isLogedIn = async (req, res, next) => {
 	const token = req.headers['authorization'];
-
+	console.log('token on refresh ' + token);
 	if (!token) {
 		return next(new Error('Unauthorized Access', 500));
 	}
 	try {
 		//token validation
 		const email = Helper.verifyJWTtoken(token);
-		// console.log('email ' + email);
+		console.log('email ' + email);
 		let user = await User.findOne({ email });
 		res.json({ user }); // logged in
 	} catch (e) {
