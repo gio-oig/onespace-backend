@@ -6,7 +6,7 @@ const loginValidation = async (data) => {
 			minDomainSegments: 2,
 			tlds: { allow: ['com', 'net'] },
 		}),
-		password: Joi.string().required(),
+		password: Joi.string().min(4).required(),
 	});
 
 	return await schema.validateAsync(data, { abortEarly: false });

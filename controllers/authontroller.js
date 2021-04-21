@@ -57,8 +57,13 @@ const login = async (req, res, next) => {
 	try {
 		await loginValidation({ email, password });
 	} catch (error) {
-		console.log(error);
-		return next(new HttpError(error.details));
+		const errors = {};
+		for (err of error.details) {
+			errors[err.context.key] = err.message;
+			console.log(err.message);
+		}
+
+		return next(new Error('validation error'));
 	}
 
 	let existingUser;
@@ -86,7 +91,7 @@ const isLogedIn = async (req, res, next) => {
 	const token = req.headers['authorization'];
 
 	if (!token) {
-		return next(new HttpError('Unauthorized Access', 500));
+		return next(new Error('Unauthorized Access', 500));
 	}
 	try {
 		//token validation

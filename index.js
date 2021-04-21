@@ -15,7 +15,7 @@ dotenv.config();
 
 const io = require('socket.io')(server, {
 	cors: {
-		origin: 'http://localhost:8080',
+		origin: ['http://localhost:8080', 'https://onespace-vue.herokuapp.com'],
 	},
 });
 
