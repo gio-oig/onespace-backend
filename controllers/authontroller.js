@@ -4,16 +4,32 @@ const User = require('../models/User');
 
 const HttpError = require('../utils/errorHelper');
 
-const { loginValidation } = require('../validations');
+const { loginValidation, registerValidation } = require('../validations');
 
 const register = async (req, res, next) => {
 	// console.log(req.file);
 	// return;
 	const { name, email, password } = req.body;
 
+	try {
+		await registerValidation(req.body);
+	} catch (error) {
+		const errors = {};
+		for (err of error.details) {
+			errors[err.context.key] = err.message;
+			console.log(err.message);
+		}
+		return res.status(422).json({
+			error: errors,
+		});
+	}
+
 	const userExists = await User.findOne({ email });
 	if (userExists) {
-		throw new HttpError('user already exists with this email', 400);
+		return res.status(422).json({
+			error: { email: 'User already exists with this email' },
+		});
+		// return next(new HttpError('user already exists with this email', 422));
 	}
 
 	let hashPass;
@@ -21,7 +37,7 @@ const register = async (req, res, next) => {
 		// generate hashed passsword
 		hashPass = await bcrypt.hash(password, await bcrypt.genSalt());
 	} catch (error) {
-		return next(new Error(error));
+		return next(new Error(error.message));
 	}
 
 	// const expireAt = Helper.getExpireDate();
@@ -62,21 +78,32 @@ const login = async (req, res, next) => {
 			errors[err.context.key] = err.message;
 			console.log(err.message);
 		}
-
-		return next(new Error('validation error'));
+		res.statusCode = 422;
+		return res.json({
+			error: errors,
+		});
+		// return next(new Error('validation error'));
 	}
 
 	let existingUser;
 	try {
 		existingUser = await User.findOne({ email });
 		if (!existingUser) {
-			throw new HttpError('Wrong Email', 500);
+			return res.status(422).json({
+				error: { email: 'Invalid Email' },
+			});
+			// return next(new HttpError('Wrong Email', 500));
 		}
 	} catch (error) {
-		console.log(error);
+		return next(new HttpError(error.message, 500));
 	}
 	const validPassword = await bcrypt.compare(password, existingUser.password);
-	if (!validPassword) return next(new Error('Invalid Password'));
+	if (!validPassword) {
+		return res.status(422).json({
+			error: { password: 'Invalid Password' },
+		});
+		// return next(new Error('Invalid Password'));
+	}
 
 	// get token and set into cookies
 	const expireAt = Helper.getExpireDate();
